@@ -1,0 +1,77 @@
+<pre>
+  BIP: ???
+  Layer: Consensus (soft fork)
+  Title: OP_CAT
+  Author: Ethan Heilman <ethan.r.heilman>
+  Status: Draft
+  Type: Standards Track
+  Created: 2022-05-15
+  License: BSD-3-Clause
+</pre>
+
+==Abstract==
+
+This BIP defines OP_CAT a new Tapscript opcode which allows the concatination of two values on the stack. This opcode would be activated via a soft fork by redefining the opcode OP_NOP5.
+
+When evaluated the OP_CAT instruction:
+# Pops the top two values off the stack,
+# concatinate the popped values together,
+# and then pushes the concatinated value on the top of the stack.
+
+OP_CAT fails if there are less than two values on the stack or if concatenated value would have a combined size of greater than the maximum script element size of 520 Bytes.
+
+==Motivation==
+Bitcoin tapscript lacks a general purpose way of combinating objects on the stack restricting the expresiveness and power of tapscript. For instance this prevents among many other things the ability to construct and evaluate merkle trees and other hashed data structures in tapscript. OP_CAT by adding a general purpose way to catecatinate stack values would overcome this limitation and greatly increase the functionality of tapscript.
+
+We are philosophically opposed to dictating the scripts that developers should or should not be allowed to write. We argue that the decision of how to use Bitcoin should be decided by the individual owner of that bitcoin. Instead the benefit of OP_CAT is in expanding the developer toolbox with a simple, modular and flexible opcode. To demonstrate the usefulness of OP_CAT below we provide a non-exhaustive list of some usecases that OP_CAT would enable:
+
+* Tree Signatures provide a multisignature script whose size can be logarithmic in the number of public keys and can encode spend conditions beyond n-of-m. For instance a transaction less than 1KB in size could support tree signatures with a thousand public keys. This also enables generalized logical spend conditions. <ref> 
+P. Wuille, "Multisig on steroids using tree signatures", 2015, https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2021-July/019233.html</ref>
+* Scripts which enable Post-Quantum Lamport Signatures in Bitcoin transactions. Lamport signatures merely requires the ability to hash and concatinate values on the stack. <ref>J. Rubin, "[bitcoin-dev] OP_CAT Makes Bitcoin Quantum Secure [was CheckSigFromStack for Arithmetic Values]", 2021, https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2021-July/019233.html</ref>
+* Enforcing Bitcoin signature nonce reuse to release secret keys. OP_CAT enables tapscripts which can check and enforce rules on the format of the spending transaction by constructing the signature from components on the stack. Thus, an output could fix the nonce value of a spending signature. If this output was double spent, the secret key of the spending signature would leak, because the double spending signatures shared the same nonce. This is very similar to the idea of non-equivocation contracts<ref>T. Ruffing, A. Kate, D. Schröder, "Liar, Liar, Coins on Fire: Penalizing Equivocation by Loss of Bitcoins", 2015, https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.727.6262&rep=rep1&type=pdf</ref> as a mechanism to punish equivocation/double spending in Bitcoin payment channels. The capability is a useful building block for payment channels and other Bitcoin protocols.
+
+The opcode OP_CAT was avaliable in early versions of Bitcoin. However OP_CAT was removed because it enabled the construction of a script whose the evaluation could have memory usage exponential in the size of the script. For instance a script which pushed an 1 Byte value on the stack then repeated the opcodes OP_DUP, OP_CAT 40 times would result in a stack value whose size was greater than 1 Terabyte. This issue was only possible because because tapscript enforces a maximum stack element size of 520 Bytes.
+
+==Specification==
+
+Pseudocode
+
+<pre>
+  if (stack.size() < 2) {
+    return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+  } else {
+    valtype vch1 = stacktop(-1);
+    valtype vch2 = stacktop(-2);
+    unsigned int catLen = vch1.size() + vch2.size()
+
+    // Tapscript forbids pushing a value larger than MAX_SCRIPT_ELEMENT_SIZE onto the stack so fail early.
+    if (catsize > MAX_SCRIPT_ELEMENT_SIZE) {
+      return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
+    } else {
+      valtype vchCat(catLen);
+      vchCat.insert(0, vch1.begin(), vch1.end() );
+      vchCat.insert(vch1.end(), vch2.begin(), vch2.end());
+
+      popstack(stack);
+      popstack(stack);
+
+      stack.push_back(vchCat);
+    }
+</pre>
+
+The value of STACK_ELEMENT_SIZE_LIMIT is 520 Bytes
+
+
+==Notes==
+
+==References==
+
+<references/>
+
+== Credits ==
+
+== Reference Implementation ==
+https://github.com/bitcoin/bitcoin/pull/xxxx
+
+== Copyright ==
+This document is placed in the public domain.
