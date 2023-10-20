@@ -35,29 +35,24 @@ The opcode OP_CAT was avaliable in early versions of Bitcoin. However OP_CAT was
 
 ==Specification==
 
-Pseudocode
-
+Implementation
 <pre>
-  if (stack.size() < 2) {
+  if (stack.size() < 2)
     return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
-  } else {
-    valtype vch1 = stacktop(-1);
-    valtype vch2 = stacktop(-2);
-    unsigned int catLen = vch1.size() + vch2.size()
+  valtype vch1 = stacktop(-2);
+  valtype vch2 = stacktop(-1);
 
-    // Tapscript forbids pushing a value larger than MAX_SCRIPT_ELEMENT_SIZE onto the stack so fail early.
-    if (catsize > MAX_SCRIPT_ELEMENT_SIZE) {
-      return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
-    } else {
-      valtype vchCat(catLen);
-      vchCat.insert(0, vch1.begin(), vch1.end() );
-      vchCat.insert(vch1.end(), vch2.begin(), vch2.end());
+  if (vch1.size() + vch2.size() > MAX_SCRIPT_ELEMENT_SIZE)
+      return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
 
-      popstack(stack);
-      popstack(stack);
+  valtype vch3;
+  vch3.reserve(vch1.size() + vch2.size());
+  vch3.insert(vch3.end(), vch1.begin(), vch1.end());
+  vch3.insert(vch3.end(), vch2.begin(), vch2.end());
 
-      stack.push_back(vchCat);
-    }
+  popstack(stack);
+  popstack(stack);
+  stack.push_back(vch3);
 </pre>
 
 The value of STACK_ELEMENT_SIZE_LIMIT is 520 Bytes
@@ -72,7 +67,7 @@ The value of STACK_ELEMENT_SIZE_LIMIT is 520 Bytes
 == Credits ==
 
 == Reference Implementation ==
-https://github.com/bitcoin/bitcoin/pull/xxxx
+https://github.com/ElementsProject/elements/blob/master/src/script/interpreter.cpp#L1043
 
 == Copyright ==
 This document is placed in the public domain.
