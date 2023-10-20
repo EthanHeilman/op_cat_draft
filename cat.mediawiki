@@ -11,7 +11,7 @@
 
 ==Abstract==
 
-This BIP defines OP_CAT a new Tapscript opcode which allows the concatination of two values on the stack. This opcode would be activated via a soft fork by redefining the opcode OP_SUCCESS80.
+This BIP defines OP_CAT a new Tapscript opcode which allows the concatenation of two values on the stack. This opcode would be activated via a soft fork by redefining the opcode OP_SUCCESS80.
 
 When evaluated the OP_CAT instruction:
 # Pops the top two values off the stack,
@@ -21,7 +21,7 @@ When evaluated the OP_CAT instruction:
 OP_CAT fails if there are less than two values on the stack or if concatenated value would have a combined size of greater than the maximum script element size of 520 Bytes.
 
 ==Motivation==
-Bitcoin tapscript lacks a general purpose way of combinating objects on the stack restricting the expresiveness and power of tapscript. For instance this prevents among many other things the ability to construct and evaluate merkle trees and other hashed data structures in tapscript. OP_CAT by adding a general purpose way to catecatinate stack values would overcome this limitation and greatly increase the functionality of tapscript.
+Bitcoin tapscript lacks a general purpose way of combinating objects on the stack restricting the expresiveness and power of tapscript. For instance this prevents among many other things the ability to construct and evaluate merkle trees and other hashed data structures in tapscript. OP_CAT by adding a general purpose way to concatenate stack values would overcome this limitation and greatly increase the functionality of tapscript.
 
 We are philosophically opposed to dictating the scripts that developers should or should not be allowed to write. We argue that the decision of how to use Bitcoin should be decided by the individual owner of that bitcoin. Instead the benefit of OP_CAT is in expanding the developer toolbox with a simple, modular and flexible opcode. To demonstrate the usefulness of OP_CAT below we provide a non-exhaustive list of some usecases that OP_CAT would enable:
 
@@ -57,7 +57,7 @@ Implementation
   stack.push_back(vch3);
 </pre>
 
-The value of STACK_ELEMENT_SIZE_LIMIT is 520 Bytes
+The value of MAX_SCRIPT_ELEMENT_SIZE is 520 Bytes
 
 
 ==Notes==
@@ -69,7 +69,7 @@ The value of STACK_ELEMENT_SIZE_LIMIT is 520 Bytes
 == Credits ==
 
 == Reference Implementation ==
-https://github.com/ElementsProject/elements/blob/master/src/script/interpreter.cpp#L1043
+[Elements](https://github.com/ElementsProject/elements/blob/master/src/script/interpreter.cpp#L1043)
 
 == Copyright ==
 This document is placed in the public domain.
