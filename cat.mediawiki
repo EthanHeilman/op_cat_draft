@@ -11,7 +11,7 @@
 
 ==Abstract==
 
-This BIP defines OP_CAT a new Tapscript opcode which allows the concatination of two values on the stack. This opcode would be activated via a soft fork by redefining the opcode OP_SUCCESS80.
+This BIP defines OP_CAT a new Tapscript opcode which allows the concatenation of two values on the stack. This opcode would be activated via a soft fork by redefining the opcode OP_SUCCESS80.
 
 When evaluated the OP_CAT instruction:
 # Pops the top two values off the stack,
@@ -21,7 +21,7 @@ When evaluated the OP_CAT instruction:
 OP_CAT fails if there are less than two values on the stack or if concatenated value would have a combined size of greater than the maximum script element size of 520 Bytes.
 
 ==Motivation==
-Bitcoin tapscript lacks a general purpose way of combinating objects on the stack restricting the expresiveness and power of tapscript. For instance this prevents among many other things the ability to construct and evaluate merkle trees and other hashed data structures in tapscript. OP_CAT by adding a general purpose way to catecatinate stack values would overcome this limitation and greatly increase the functionality of tapscript.
+Bitcoin tapscript lacks a general purpose way of combinating objects on the stack restricting the expresiveness and power of tapscript. For instance this prevents among many other things the ability to construct and evaluate merkle trees and other hashed data structures in tapscript. OP_CAT by adding a general purpose way to concatenate stack values would overcome this limitation and greatly increase the functionality of tapscript.
 
 We are philosophically opposed to dictating the scripts that developers should or should not be allowed to write. We argue that the decision of how to use Bitcoin should be decided by the individual owner of that bitcoin. Instead the benefit of OP_CAT is in expanding the developer toolbox with a simple, modular and flexible opcode. To demonstrate the usefulness of OP_CAT below we provide a non-exhaustive list of some usecases that OP_CAT would enable:
 
@@ -30,37 +30,34 @@ P. Wuille, "Multisig on steroids using tree signatures", 2015, https://lists.lin
 * Post-Quantum Lamport Signatures in Bitcoin transactions. Lamport signatures merely requires the ability to hash and concatinate values on the stack. <ref>J. Rubin, "[bitcoin-dev] OP_CAT Makes Bitcoin Quantum Secure [was CheckSigFromStack for Arithmetic Values]", 2021, https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2021-July/019233.html</ref>
 * Non-equivocation contracts <ref>T. Ruffing, A. Kate, D. Schröder, "Liar, Liar, Coins on Fire: Penalizing Equivocation by Loss of Bitcoins", 2015, https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.727.6262&rep=rep1&type=pdf</ref> in tapscript provide a mechanism to punish equivocation/double spending in Bitcoin payment channels. OP_CAT enables this by enforcing rules on the spending transaction's nonce. The capability is a useful building block for payment channels and other Bitcoin protocols.
 * Vaults <ref> M. Moser, I. Eyal, and E. G. Sirer, Bitcoin Covenants, http://fc16.ifca.ai/bitcoin/papers/MES16.pdf</ref> which are a specialized covenant that allows a user to block a malicious party who has compromised the user's secret key from stealing the funds in that output. As shown in <ref>A, Poelstra, "CAT and Schnorr Tricks II", 2021, https://www.wpsoftware.net/andrew/blog/cat-and-schnorr-tricks-ii.html</ref> OP_CAT is sufficent to build vaults in Bitcoin, but OP_CAT does not allow covenants.
+* Replicating CheckSigFromStack <ref> A. Poelstra, https://medium.com/blockstream/cat-and-schnorr-tricks-i-faf1b59bd298 </ref> which would allow the creation of covenants and other advanced contracts without having to presign spending transactions, possibly reducing complexity and the amount of data that needs to be stored.
 
-The opcode OP_CAT was avaliable in early versions of Bitcoin. However OP_CAT was removed because it enabled the construction of a script whose the evaluation could have memory usage exponential in the size of the script. For instance a script which pushed an 1 Byte value on the stack then repeated the opcodes OP_DUP, OP_CAT 40 times would result in a stack value whose size was greater than 1 Terabyte. This issue was only possible because because tapscript enforces a maximum stack element size of 520 Bytes.
+The opcode OP_CAT was avaliable in early versions of Bitcoin. However OP_CAT was removed because it enabled the construction of a script whose the evaluation could have memory usage exponential in the size of the script.
+For instance a script which pushed an 1 Byte value on the stack then repeated the opcodes OP_DUP, OP_CAT 40 times would result in a stack value whose size was greater than 1 Terabyte. This is no longer an issue because tapscript enforces a maximum stack element size of 520 Bytes.
 
 ==Specification==
 
-Pseudocode
-
+Implementation
 <pre>
-  if (stack.size() < 2) {
+  if (stack.size() < 2)
     return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
-  } else {
-    valtype vch1 = stacktop(-1);
-    valtype vch2 = stacktop(-2);
-    unsigned int catLen = vch1.size() + vch2.size()
+  valtype vch1 = stacktop(-2);
+  valtype vch2 = stacktop(-1);
 
-    // Tapscript forbids pushing a value larger than MAX_SCRIPT_ELEMENT_SIZE onto the stack so fail early.
-    if (catsize > MAX_SCRIPT_ELEMENT_SIZE) {
-      return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
-    } else {
-      valtype vchCat(catLen);
-      vchCat.insert(0, vch1.begin(), vch1.end() );
-      vchCat.insert(vch1.end(), vch2.begin(), vch2.end());
+  if (vch1.size() + vch2.size() > MAX_SCRIPT_ELEMENT_SIZE)
+      return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
 
-      popstack(stack);
-      popstack(stack);
+  valtype vch3;
+  vch3.reserve(vch1.size() + vch2.size());
+  vch3.insert(vch3.end(), vch1.begin(), vch1.end());
+  vch3.insert(vch3.end(), vch2.begin(), vch2.end());
 
-      stack.push_back(vchCat);
-    }
+  popstack(stack);
+  popstack(stack);
+  stack.push_back(vch3);
 </pre>
 
-The value of STACK_ELEMENT_SIZE_LIMIT is 520 Bytes
+The value of MAX_SCRIPT_ELEMENT_SIZE is 520 Bytes
 
 
 ==Notes==
@@ -72,7 +69,7 @@ The value of STACK_ELEMENT_SIZE_LIMIT is 520 Bytes
 == Credits ==
 
 == Reference Implementation ==
-https://github.com/bitcoin/bitcoin/pull/xxxx
+[Elements](https://github.com/ElementsProject/elements/blob/master/src/script/interpreter.cpp#L1043)
 
 == Copyright ==
 This document is placed in the public domain.
