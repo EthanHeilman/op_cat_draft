@@ -60,10 +60,26 @@ Implementation
   popstack(stack);
   stack.push_back(vch3);
 </pre>
+This implementation is based on the implementation of OP_CAT in elements.
 
 The value of MAX_SCRIPT_ELEMENT_SIZE is 520 Bytes
 
 ==Notes==
+
+OP_CAT as it existed in the Bitcoin codebase prior to the commit (["misc changes" or 4bd188c](https://github.com/bitcoin/bitcoin/commit/4bd188c4383d6e614e18f79dc337fbabe8464c82#diff-27496895958ca30c47bbb873299a2ad7a7ea1003a9faa96b317250e3b7aa1fefL381)) which disabled it.
+
+<pre>
+  // (x1 x2 -- out)
+  if (stack.size() < 2)
+    return false;
+  valtype& vch1 = stacktop(-2);
+  valtype& vch2 = stacktop(-1);
+  vch1.insert(vch1.end(), vch2.begin(), vch2.end());
+  stack.pop_back();
+  if (stacktop(-1).size() > 5000)
+    return false;
+  }
+</pre>
 
 ==References==
 
