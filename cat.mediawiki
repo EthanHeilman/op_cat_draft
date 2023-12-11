@@ -81,7 +81,9 @@ OP_CAT as it existed in the Bitcoin codebase prior to the commit "misc changes" 
 
 <references/>
 
-== Credits ==
+==Acknowledgements==
+
+We wish to acknowledge Dan Gould for encouraging and helping review this effort. 
 
 == Copyright ==
 This document is placed in the public domain.
