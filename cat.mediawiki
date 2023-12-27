@@ -78,7 +78,8 @@ OP_CAT as it existed in the Bitcoin codebase prior to the commit "misc changes" 
 </pre>
 
 ==Backwards Compatibility==
-OP_CAT will continue to trigger the `SCRIPT_ERR_DISABLED_OPCODE` error in Non-SegWitV1 scenarios.
+OP_CAT usage in any Non-SegWitV1 script will continue to trigger the SCRIPT_ERR_DISABLED_OPCODE.
+
 ==References==
 
 <references/>
